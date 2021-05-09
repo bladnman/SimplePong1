@@ -1,41 +1,63 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
-public class GameManager : MonoBehaviour {
+public class GameManager : MonoBehaviour
+{
   [SerializeField] GameObject ballPrefab;
 
   [SerializeField] float secondsPerBall = 5f;
   [SerializeField] int maxBalls = 3;
-  [SerializeField] int leftScore = 0;
-  [SerializeField] int rightScore = 0;
+  [SerializeField] float ballLaunchMin = 2f;
+  [SerializeField] float ballLaunchMax = 7f;
+  [SerializeField] TMP_Text leftScoreLabel;
+  [SerializeField] TMP_Text rightScoreLabel;
 
+  int leftScore = 0;
+  int rightScore = 0;
   float lastLaunchTime = 0f;
   bool IsBallQueued = true;
   int ballCount = 0;
 
 
-  void Start() {
+  void Start()
+  {
     lastLaunchTime = Time.time - 2; // 2 seconds to launch first ball
     Ball.BallHitGoal += HandleGoal;
+    UpdateScores();
   }
-  private void OnDestroy() {
+  private void OnDestroy()
+  {
     Ball.BallHitGoal -= HandleGoal;
   }
-  void HandleGoal(Ball ball) {
+  void HandleGoal(Ball ball)
+  {
     bool isLeftGoal = ball.transform.position.x < 0f;
-    if (isLeftGoal) {
-      leftScore++;
-    } else {
+    if (isLeftGoal)
+    {
       rightScore++;
+    }
+    else
+    {
+      leftScore++;
     }
     ballCount--;
     Destroy(ball);
+
+    UpdateScores();
   }
-  bool FlipIsHeads() {
+  void UpdateScores()
+  {
+    leftScoreLabel.text = $"{leftScore}";
+    rightScoreLabel.text = $"{rightScore}";
+  }
+  bool FlipIsHeads()
+  {
     return Random.Range(0, 1) == 1;
   }
-  void SpawnBall() {
+  void SpawnBall()
+  {
 
     if (ballCount >= maxBalls) return;
 
@@ -45,8 +67,8 @@ public class GameManager : MonoBehaviour {
     var ball = Instantiate(ballPrefab, centerPos, Quaternion.identity);
 
     var rb = ball.GetComponent<Rigidbody2D>();
-    var vx = UnityEngine.Random.Range(2f, 5f);
-    var vy = UnityEngine.Random.Range(2f, 5f);
+    var vx = UnityEngine.Random.Range(ballLaunchMin, ballLaunchMax);
+    var vy = UnityEngine.Random.Range(ballLaunchMin, ballLaunchMax);
     vx = FlipIsHeads() ? vx : vx * -1;
     vy = FlipIsHeads() ? vy : vy * -1;
     rb.velocity = new Vector2(vx, vy);
@@ -55,9 +77,11 @@ public class GameManager : MonoBehaviour {
     ballCount++;
   }
 
-  private void Update() {
+  private void Update()
+  {
     // spawn ever x
-    if (Time.time - lastLaunchTime > secondsPerBall) {
+    if (Time.time - lastLaunchTime > secondsPerBall)
+    {
       SpawnBall();
     }
   }
